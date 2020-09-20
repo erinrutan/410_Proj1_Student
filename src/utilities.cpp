@@ -25,6 +25,15 @@ int stringToInt(const char *myString) {
 
 std::vector<process_stats> data;
 
+void trim(string& s) {
+   size_t p = s.find_first_not_of(" \t");
+   s.erase(0, p);
+
+   p = s.find_last_not_of(" \t");
+   if (string::npos != p)
+      s.erase(p+1);
+}
+
 int loadData(const char* filename, bool ignoreFirstRow) {
 	ifstream myfile;
 	myfile.open(filename);
@@ -34,10 +43,9 @@ int loadData(const char* filename, bool ignoreFirstRow) {
 
 	data.clear();
 	string line;
-	istringstream ss(line);
 	if (ignoreFirstRow) {
 		string ignoreLine;
-		getline(ss, ignoreLine);
+		getline(myfile, ignoreLine);
 	}
 	while (getline(myfile, line)) {
 		istringstream ss(line);
@@ -45,32 +53,34 @@ int loadData(const char* filename, bool ignoreFirstRow) {
 		string tempVal;
 
 		getline(ss, tempVal, ',');
-		if (tempVal == "" || (tempVal.find(" ") != -1)) {
+		trim(tempVal);
+		if (tempVal == "" || (tempVal.find(" ") != string::npos)) {
 			//skip to next row, bad data
 			continue;
 		}
 		temp.process_number = stringToInt(tempVal.c_str());
 		getline(ss, tempVal, ',');
-		if (tempVal == "" || (tempVal.find(" ") != -1)) {
+		trim(tempVal);
+		if (tempVal == "" || (tempVal.find(" ") != string::npos)) {
 			//skip to next row, bad data
 			continue;
 		}
 		temp.start_time = stringToInt(tempVal.c_str());
 		getline(ss, tempVal, ',');
-		if (tempVal == "" || (tempVal.find(" ") != -1)) {
+		trim(tempVal);
+		if (tempVal == "" || (tempVal.find(" ") != string::npos)) {
 			//skip to next row, bad data
 			continue;
 		}
 		temp.cpu_time = stringToInt(tempVal.c_str());
 		getline(ss, tempVal, ',');
-		if ((tempVal == "" || tempVal.find(" ") != -1) && tempVal != " 3") {
+		trim(tempVal);
+		if (tempVal == "" || (tempVal.find(" ") != string::npos)) {
 			//skip to next row, bad data
 			continue;
 		}
 		temp.io_time = stringToInt(tempVal.c_str());
-
 		data.push_back(temp);
-
 	}
 
 	myfile.close();
@@ -80,26 +90,22 @@ int loadData(const char* filename, bool ignoreFirstRow) {
 
 //will sort according to user preference
 void sortData(SORT_ORDER mySortOrder) {
-
-
-//	for (int i = 0; i < data.size()-1; i++) {
-//		for (int j = 1; j < data.size(); j++) {
-//			process_stats a = data[i];
-//			process_stats b = data[j];
-	auto compare = [](const process_stats &a, const process_stats &b) {
+	auto compare = [mySortOrder](const process_stats &a, const process_stats &b) {
 		switch (mySortOrder) {
 				case SORT_ORDER::PROCESS_NUMBER:
 					return a.process_number < b.process_number;
 				case SORT_ORDER::START_TIME:
 					return a.start_time < b.start_time;
+				case SORT_ORDER::CPU_TIME:
+					return a.cpu_time < b.cpu_time;
+				case SORT_ORDER::IO_TIME:
+					return a.io_time < b.io_time;
+				default:
+					break;
 			}
 		};
 	sort(begin(data),end(data), compare);
-//		}
-//	}
 }
-
-
 
 process_stats getNext() {
 	process_stats myFirst;
@@ -112,5 +118,3 @@ process_stats getNext() {
 int getNumbRows(){
 	return data.size();
 }
-
-
