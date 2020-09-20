@@ -32,16 +32,18 @@ int loadData(const char* filename, bool ignoreFirstRow) {
 		return COULD_NOT_OPEN_FILE;
 	}
 
+	data.clear();
 	string line;
+	istringstream ss(line);
+	if (ignoreFirstRow) {
+		string ignoreLine;
+		getline(ss, ignoreLine);
+	}
 	while (getline(myfile, line)) {
 		istringstream ss(line);
 		process_stats temp;
 		string tempVal;
-		if (ignoreFirstRow) {
-			string ignoreLine;
-			//delete the first row of data
-			getline(ss, ignoreLine);
-		}
+
 		getline(ss, tempVal, ',');
 		if (tempVal == "" || (tempVal.find(" ") != -1)) {
 			//skip to next row, bad data
@@ -61,12 +63,14 @@ int loadData(const char* filename, bool ignoreFirstRow) {
 		}
 		temp.cpu_time = stringToInt(tempVal.c_str());
 		getline(ss, tempVal, ',');
-		if (tempVal == "" || (tempVal.find(" ") != -1)) {
+		if ((tempVal == "" || tempVal.find(" ") != -1) && tempVal != " 3") {
 			//skip to next row, bad data
 			continue;
 		}
 		temp.io_time = stringToInt(tempVal.c_str());
+
 		data.push_back(temp);
+
 	}
 
 	myfile.close();
@@ -76,16 +80,26 @@ int loadData(const char* filename, bool ignoreFirstRow) {
 
 //will sort according to user preference
 void sortData(SORT_ORDER mySortOrder) {
-	for (int i = 0; i < data.size()-1; i++) {
-		for (int j = 1; j < data.size(); j++) {
-			process_stats a = data[i];
-			process_stats b = data[j];
-			auto compare = [](const process_stats &a, const process_stats &b) {
-				return a.process_number < b.process_number;};
-			sort(begin(data),end(data), compare);
-		}
-	}
+
+
+//	for (int i = 0; i < data.size()-1; i++) {
+//		for (int j = 1; j < data.size(); j++) {
+//			process_stats a = data[i];
+//			process_stats b = data[j];
+	auto compare = [](const process_stats &a, const process_stats &b) {
+		switch (mySortOrder) {
+				case SORT_ORDER::PROCESS_NUMBER:
+					return a.process_number < b.process_number;
+				case SORT_ORDER::START_TIME:
+					return a.start_time < b.start_time;
+			}
+		};
+	sort(begin(data),end(data), compare);
+//		}
+//	}
 }
+
+
 
 process_stats getNext() {
 	process_stats myFirst;
