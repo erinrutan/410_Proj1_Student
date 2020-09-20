@@ -43,25 +43,25 @@ int loadData(const char* filename, bool ignoreFirstRow) {
 			getline(ss, ignoreLine);
 		}
 		getline(ss, tempVal, ',');
-		if (tempVal == "" || tempVal.find(" ")) {
+		if (tempVal == "" || (tempVal.find(" ") != -1)) {
 			//skip to next row, bad data
 			continue;
 		}
 		temp.process_number = stringToInt(tempVal.c_str());
 		getline(ss, tempVal, ',');
-		if (tempVal == "" || tempVal.find(" ")) {
+		if (tempVal == "" || (tempVal.find(" ") != -1)) {
 			//skip to next row, bad data
 			continue;
 		}
 		temp.start_time = stringToInt(tempVal.c_str());
 		getline(ss, tempVal, ',');
-		if (tempVal == "" || tempVal.find(" ")) {
+		if (tempVal == "" || (tempVal.find(" ") != -1)) {
 			//skip to next row, bad data
 			continue;
 		}
 		temp.cpu_time = stringToInt(tempVal.c_str());
 		getline(ss, tempVal, ',');
-		if (tempVal == "" || tempVal.find(" ")) {
+		if (tempVal == "" || (tempVal.find(" ") != -1)) {
 			//skip to next row, bad data
 			continue;
 		}
@@ -76,19 +76,27 @@ int loadData(const char* filename, bool ignoreFirstRow) {
 
 //will sort according to user preference
 void sortData(SORT_ORDER mySortOrder) {
-
+	for (int i = 0; i < data.size()-1; i++) {
+		for (int j = 1; j < data.size(); j++) {
+			process_stats a = data[i];
+			process_stats b = data[j];
+			auto compare = [](const process_stats &a, const process_stats &b) {
+				return a.process_number < b.process_number;};
+			sort(begin(data),end(data), compare);
+		}
+	}
 }
 
 process_stats getNext() {
 	process_stats myFirst;
-
+	myFirst = data.front();
+	data.erase(data.begin());
 	return myFirst;
 }
 
 //returns number of process_stats structs in the vector holding them
 int getNumbRows(){
 	return data.size();
-	//return 0;
 }
 
 
